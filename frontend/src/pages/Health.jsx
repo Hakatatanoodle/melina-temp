@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { healthService, recordTypeLabel } from '../services/health.service.js';
 import { petsService } from '../services/pets.service.js';
+import AddPetModal from '../components/AddPetModal.jsx';
 import HealthRecordForm from '../components/HealthRecordForm.jsx';
 import ConfirmDialog from '../components/ConfirmDialog.jsx';
 import EmptyState from '../components/EmptyState.jsx';
@@ -18,6 +19,7 @@ export default function Health() {
   const [pets, setPets] = useState([]);
   const [error, setError] = useState('');
 
+  const [showAddPet, setShowAddPet] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [recordToEdit, setRecordToEdit] = useState(null);
   const [recordToDelete, setRecordToDelete] = useState(null);
@@ -98,9 +100,9 @@ export default function Health() {
             title="Add a pet first."
             text="Health records live with each pet. Add your first companion, then start their care history."
             action={
-              <Link to="/app/pets/new" className="btn btn--primary">
+              <button type="button" className="btn btn--primary" onClick={() => setShowAddPet(true)}>
                 Add Your First Pet
-              </Link>
+              </button>
             }
           />
         ) : (
@@ -121,6 +123,16 @@ export default function Health() {
         <div className="health-card">
           <TimelineView timeline={timeline} onEdit={editRecord} onDelete={setRecordToDelete} />
         </div>
+      )}
+
+      {showAddPet && (
+        <AddPetModal
+          onClose={() => setShowAddPet(false)}
+          onCreated={async () => {
+            setShowAddPet(false);
+            await loadAll();
+          }}
+        />
       )}
 
       {showForm && (

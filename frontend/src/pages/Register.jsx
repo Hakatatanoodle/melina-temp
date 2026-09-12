@@ -45,7 +45,7 @@ export default function Register() {
       const user = await register(values);
       toast.success(`Welcome to PetCare, ${firstName(user.fullName)}!`);
       const next = searchParams.get('next');
-      navigate(next && next.startsWith('/') ? next : '/app', { replace: true });
+      navigate(next && next.startsWith('/') && next !== '/app' ? next : '/app/onboarding', { replace: true });
     } catch (error) {
       if (error.errors) setErrors(error.errors);
       else setFormError(error.message);

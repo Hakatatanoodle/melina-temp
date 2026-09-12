@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
 import { petsService } from '../services/pets.service.js';
 import PetCard from '../components/PetCard.jsx';
 import EmptyState from '../components/EmptyState.jsx';
+import AddPetModal from '../components/AddPetModal.jsx';
 import ConfirmDialog from '../components/ConfirmDialog.jsx';
 import { PageLoader } from '../components/Spinner.jsx';
 import { useToast } from '../components/Toast.jsx';
@@ -11,9 +11,9 @@ import { PlusIcon, PawIcon } from '../components/icons.jsx';
 /** My Pets — the full family grid with add + manage actions. */
 export default function Pets() {
   const toast = useToast();
-  const navigate = useNavigate();
   const [pets, setPets] = useState(null);
   const [error, setError] = useState('');
+  const [showAdd, setShowAdd] = useState(false);
   const [petToDelete, setPetToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -54,10 +54,10 @@ export default function Pets() {
             {pets?.length ? `${pets.length} ${pets.length === 1 ? 'companion' : 'companions'} in your care.` : 'Your family, all in one place.'}
           </p>
         </div>
-        <Link to="/app/pets/new" className="btn btn--primary">
+        <button type="button" className="btn btn--primary" onClick={() => setShowAdd(true)}>
           <PlusIcon size={15} />
           Add Pet
-        </Link>
+        </button>
       </div>
 
       {error && <div className="alert">{error}</div>}
@@ -69,7 +69,7 @@ export default function Pets() {
           title="Your pet family is looking a little empty."
           text="Add your first companion to get started — PetCare will keep their story organized."
           action={
-            <button type="button" className="btn btn--primary" onClick={() => navigate('/app/pets/new')}>
+            <button type="button" className="btn btn--primary" onClick={() => setShowAdd(true)}>
               Add Your First Pet
             </button>
           }
@@ -82,6 +82,16 @@ export default function Pets() {
             <PetCard key={pet.id} pet={pet} onDelete={setPetToDelete} />
           ))}
         </div>
+      )}
+
+      {showAdd && (
+        <AddPetModal
+          onClose={() => setShowAdd(false)}
+          onCreated={async () => {
+            setShowAdd(false);
+            await loadPets();
+          }}
+        />
       )}
 
       {petToDelete && (

@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { petsService } from '../services/pets.service.js';
 import { healthService } from '../services/health.service.js';
 import PetCard from '../components/PetCard.jsx';
 import EmptyState from '../components/EmptyState.jsx';
+import AddPetModal from '../components/AddPetModal.jsx';
 import ConfirmDialog from '../components/ConfirmDialog.jsx';
 import { PageLoader } from '../components/Spinner.jsx';
 import { useToast } from '../components/Toast.jsx';
@@ -20,11 +21,11 @@ import { recordTypeLabel } from '../services/health.service.js';
 export default function Dashboard() {
   const { user } = useAuth();
   const toast = useToast();
-  const navigate = useNavigate();
 
   const [pets, setPets] = useState(null);
   const [recent, setRecent] = useState(null);
   const [error, setError] = useState('');
+  const [showAdd, setShowAdd] = useState(false);
   const [petToDelete, setPetToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -115,10 +116,10 @@ export default function Dashboard() {
       <section aria-label="My Pets">
         <div className="section-head" style={{ marginTop: 0 }}>
           <h2 className="section-head__title">My Pets</h2>
-          <Link to="/app/pets/new" className="btn btn--primary btn--sm">
+          <button type="button" className="btn btn--primary btn--sm" onClick={() => setShowAdd(true)}>
             <PlusIcon size={15} />
             Add Pet
-          </Link>
+          </button>
         </div>
 
         {error && <div className="alert">{error}</div>}
@@ -130,7 +131,7 @@ export default function Dashboard() {
             title="Your pet family is looking a little empty."
             text="Add your first companion to get started — PetCare will keep their story organized."
             action={
-              <button type="button" className="btn btn--primary" onClick={() => navigate('/app/pets/new')}>
+              <button type="button" className="btn btn--primary" onClick={() => setShowAdd(true)}>
                 Add Your First Pet
               </button>
             }
@@ -180,6 +181,16 @@ export default function Dashboard() {
             </div>
           </div>
         </section>
+      )}
+
+      {showAdd && (
+        <AddPetModal
+          onClose={() => setShowAdd(false)}
+          onCreated={async () => {
+            setShowAdd(false);
+            await loadPets();
+          }}
+        />
       )}
 
       {petToDelete && (

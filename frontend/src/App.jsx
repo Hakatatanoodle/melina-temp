@@ -9,6 +9,7 @@ import Register from './pages/Register.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Pets from './pages/Pets.jsx';
 import PetDetail from './pages/PetDetail.jsx';
+import Onboarding from './pages/Onboarding.jsx';
 import PetFormPage from './pages/PetFormPage.jsx';
 import Health from './pages/Health.jsx';
 import Profile from './pages/Profile.jsx';
@@ -35,7 +36,7 @@ export default function App() {
             >
               <Route index element={<Dashboard />} />
               <Route path="pets" element={<Pets />} />
-              <Route path="pets/new" element={<PetFormPage />} />
+              <Route path="onboarding" element={<Onboarding />} />
               <Route path="pets/:id" element={<PetDetail />} />
               <Route path="pets/:id/edit" element={<PetFormPage />} />
               <Route path="health" element={<Health />} />

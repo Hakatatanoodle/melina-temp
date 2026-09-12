@@ -6,21 +6,17 @@ import { PageLoader } from '../components/Spinner.jsx';
 import { useToast } from '../components/Toast.jsx';
 import { ArrowLeftIcon } from '../components/icons.jsx';
 
-/**
- * Add Pet / Edit Pet. Product copy adapts: "Tell us about her" on create,
- * "Edit Bruno" on edit — never "Create record".
- */
+/** Edit Pet ("Edit Bruno"). Creation now lives in the onboarding wizard. */
 export default function PetFormPage() {
   const { id } = useParams();
-  const isEdit = Boolean(id);
 
   const navigate = useNavigate();
   const toast = useToast();
-  const [pet, setPet] = useState(isEdit ? null : undefined); // null = loading, undefined = new
+  const [pet, setPet] = useState(null);
   const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
-    if (!isEdit) return;
+    if (!id) return;
     let active = true;
     petsService
       .get(id)
@@ -33,18 +29,12 @@ export default function PetFormPage() {
     return () => {
       active = false;
     };
-  }, [isEdit, id]);
+  }, [id]);
 
   async function handleSubmit(payload) {
-    if (isEdit) {
-      const data = await petsService.update(id, payload);
-      toast.success(`${data.pet.name} was updated.`);
-      navigate(`/app/pets/${id}`);
-    } else {
-      const data = await petsService.create(payload);
-      toast.success(`Welcome to the family, ${data.pet.name}!`);
-      navigate(`/app/pets/${data.pet.id}`);
-    }
+    const data = await petsService.update(id, payload);
+    toast.success(`${data.pet.name} was updated.`);
+    navigate(`/app/pets/${id}`);
   }
 
   if (loadError) {
@@ -61,14 +51,14 @@ export default function PetFormPage() {
     );
   }
 
-  const title = isEdit ? `Edit ${pet?.name || 'pet'}` : 'Add a pet';
-  const subtitle = isEdit ? 'Update their information whenever life changes.' : 'A little profile for a new companion.';
+  const title = `Edit ${pet?.name || 'pet'}`;
+  const subtitle = 'Update their information whenever life changes — weight, photos and notes live here.';
 
   return (
     <div className="page-enter">
-      <Link to={isEdit ? `/app/pets/${id}` : '/app/pets'} className="back-link">
+      <Link to={`/app/pets/${id}`} className="back-link">
         <ArrowLeftIcon size={15} />
-        {isEdit ? `Back to ${pet?.name || 'profile'}` : 'Back to My Pets'}
+        {`Back to ${pet?.name || 'profile'}`}
       </Link>
 
       <div className="page-head" style={{ marginTop: 10 }}>
@@ -78,13 +68,13 @@ export default function PetFormPage() {
         </div>
       </div>
 
-      {isEdit && !pet ? (
+      {!pet ? (
         <PageLoader label="Fetching profile…" />
       ) : (
         <div className="form-card">
           <PetForm
-            initialValues={petToFormValues(isEdit ? pet : undefined)}
-            submitLabel={isEdit ? 'Save Changes' : 'Add Pet'}
+            initialValues={petToFormValues(pet)}
+            submitLabel='Save Changes'
             onSubmit={handleSubmit}
           />
         </div>
