@@ -3,21 +3,17 @@
 /**
  * Demo seed for PetCare.
  *
- *   npm run seed
+ *   npm run seed   (+ MONGODB_URI=... to seed the cloud database instead)
  *
- * WARNING: this resets backend/data/*.json to a fresh demo state.
+ * WARNING: this resets the target store to a fresh demo state.
  * Creates the account  demo@petcare.dev  (password: demo-petcare)
  * with Bruno and Luna plus realistic health records.
  */
 
-const fs = require('fs');
-const path = require('path');
 const bcrypt = require('bcryptjs');
 
-const storage = require('../storage/json-storage');
+const storage = require('../storage');
 const uploadStorage = require('../storage/uploads');
-
-const DATA_DIR = path.join(__dirname, '..', 'data');
 
 function isoOffset(days) {
   const date = new Date();
@@ -25,24 +21,37 @@ function isoOffset(days) {
   return date.toISOString().slice(0, 10);
 }
 
-function resetDataFiles() {
-  storage.ensureDataFiles();
-  for (const name of ['users.json', 'pets.json', 'health-records.json']) {
-    fs.writeFileSync(path.join(DATA_DIR, name), '[]\n', 'utf8');
+async function resetStore() {
+  await storage.ensureDataFiles();
+  if (storage.useMongo()) {
+    const { getDb } = require('../storage/mongo');
+    const db = await getDb();
+    await Promise.all([
+      db.collection('users').deleteMany({}),
+      db.collection('pets').deleteMany({}),
+      db.collection('health_records').deleteMany({}),
+    ]);
+  } else {
+    const fs = require('fs');
+    const path = require('path');
+    const DATA_DIR = path.join(__dirname, '..', 'data');
+    for (const name of ['users.json', 'pets.json', 'health-records.json']) {
+      fs.writeFileSync(path.join(DATA_DIR, name), '[]\n', 'utf8');
+    }
   }
   uploadStorage.clearAll();
 }
 
-function main() {
-  resetDataFiles();
+async function main() {
+  await resetStore();
 
-  const user = storage.addUser({
+  const user = await storage.addUser({
     fullName: 'Alex Rivera',
     email: 'demo@petcare.dev',
     passwordHash: bcrypt.hashSync('demo-petcare', 10),
   });
 
-  const bruno = storage.addPet({
+  const bruno = await storage.addPet({
     id: storage.newId(),
     ownerId: user.id,
     name: 'Bruno',
@@ -57,7 +66,7 @@ function main() {
     updatedAt: new Date().toISOString(),
   });
 
-  const luna = storage.addPet({
+  const luna = await storage.addPet({
     id: storage.newId(),
     ownerId: user.id,
     name: 'Luna',
@@ -72,7 +81,7 @@ function main() {
     updatedAt: new Date().toISOString(),
   });
 
-  const coco = storage.addPet({
+  const coco = await storage.addPet({
     id: storage.newId(),
     ownerId: user.id,
     name: 'Coco',
@@ -87,7 +96,7 @@ function main() {
     updatedAt: new Date().toISOString(),
   });
 
-  const nibbles = storage.addPet({
+  const nibbles = await storage.addPet({
     id: storage.newId(),
     ownerId: user.id,
     name: 'Nibbles',
@@ -170,7 +179,7 @@ function main() {
   ];
 
   for (const record of records) {
-    storage.addRecord({
+    await storage.addRecord({
       id: storage.newId(),
       ...record,
       createdAt: new Date().toISOString(),
@@ -178,10 +187,14 @@ function main() {
     });
   }
 
-  console.log('Seed complete.');
+  const petCount = (await storage.getPetsByOwner(user.id)).length;
+  console.log(`Seed complete (store: ${storage.useMongo() ? 'MongoDB Atlas' : 'local JSON'}).`);
   console.log('  login:  demo@petcare.dev');
   console.log('  password: demo-petcare');
-  console.log(`  pets: ${storage.getPetsByOwner(user.id).length}, records: ${records.length}`);
+  console.log(`  pets: ${petCount}, records: ${records.length}`);
 }
 
-main();
+main().catch((err) => {
+  console.error(err);
+  process.exitCode = 1;
+});

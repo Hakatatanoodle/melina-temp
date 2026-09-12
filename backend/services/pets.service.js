@@ -1,6 +1,6 @@
 'use strict';
 
-const storage = require('../storage/json-storage');
+const storage = require('../storage');
 const uploadStorage = require('../storage/uploads');
 const { HttpError } = require('../utils/http-error');
 const {
@@ -32,8 +32,8 @@ function todayIso() {
  *   - nextCare: soonest record dated today or in the future (or null)
  *   - lastCare: most recent record dated before today (or null)
  */
-function composePet(pet) {
-  const records = storage.getRecordsByPet(pet.id);
+async function composePet(pet) {
+  const records = await storage.getRecordsByPet(pet.id);
   const today = todayIso();
 
   const upcoming = records.filter((record) => record.date >= today);
@@ -114,8 +114,8 @@ function buildPet(ownerId, data) {
   };
 }
 
-function getOwnedPet(ownerId, petId) {
-  const pet = storage.findPetById(petId);
+async function getOwnedPet(ownerId, petId) {
+  const pet = await storage.findPetById(petId);
   // Unknown id and another user's pet are indistinguishable to the caller —
   // a user must not be able to probe for the existence of foreign pets.
   if (!pet || pet.ownerId !== ownerId) {
@@ -146,22 +146,25 @@ function applyUpdates(pet, data) {
 /* Public service API                                                  */
 /* ------------------------------------------------------------------ */
 
-function listForOwner(ownerId) {
-  return storage.getPetsByOwner(ownerId).map(composePet);
+async function listForOwner(ownerId) {
+  const pets = await storage.getPetsByOwner(ownerId);
+  const composed = [];
+  for (const pet of pets) composed.push(await composePet(pet));
+  return composed;
 }
 
-function getForOwner(ownerId, petId) {
-  return composePet(getOwnedPet(ownerId, petId));
+async function getForOwner(ownerId, petId) {
+  return composePet(await getOwnedPet(ownerId, petId));
 }
 
-function createForOwner(ownerId, input) {
+async function createForOwner(ownerId, input) {
   const data = normalizeInput(input);
   const errors = {};
   validatePetInput(data, errors);
   if (Object.keys(errors).length > 0) {
     throw new HttpError(400, 'Please fix the highlighted fields.', errors);
   }
-  return composePet(storage.addPet(buildPet(ownerId, data)));
+  return composePet(await storage.addPet(buildPet(ownerId, data)));
 }
 
 /** Removes the uploaded image file behind an imageUrl, when there is one. */
@@ -172,15 +175,15 @@ function removeImageIfUploaded(ownerId, imageUrl) {
   }
 }
 
-function updateForOwner(ownerId, petId, input) {
-  const pet = getOwnedPet(ownerId, petId);
+async function updateForOwner(ownerId, petId, input) {
+  const pet = await getOwnedPet(ownerId, petId);
   const data = normalizeInput(input);
   const errors = {};
   validatePetInput(data, errors);
   if (Object.keys(errors).length > 0) {
     throw new HttpError(400, 'Please fix the highlighted fields.', errors);
   }
-  const updated = storage.updatePet(applyUpdates(pet, data));
+  const updated = await storage.updatePet(applyUpdates(pet, data));
   // Discard the old uploaded file when the photo was replaced.
   if (pet.imageUrl !== updated.imageUrl) {
     removeImageIfUploaded(ownerId, pet.imageUrl);
@@ -188,10 +191,10 @@ function updateForOwner(ownerId, petId, input) {
   return composePet(updated);
 }
 
-function removeForOwner(ownerId, petId) {
-  const pet = getOwnedPet(ownerId, petId);
-  storage.deletePet(petId);
-  storage.deleteRecordsByPet(petId);
+async function removeForOwner(ownerId, petId) {
+  const pet = await getOwnedPet(ownerId, petId);
+  await storage.deletePet(petId);
+  await storage.deleteRecordsByPet(petId);
   removeImageIfUploaded(ownerId, pet.imageUrl);
 }
 

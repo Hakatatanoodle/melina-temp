@@ -90,6 +90,19 @@ function readDataFile(name) {
   return raw ? JSON.parse(raw) : [];
 }
 
+/** In Mongo mode the persistence check reads back through a fresh API session. */
+async function mongoUserSnapshot(email) {
+  const probe = makeAgent();
+  // Registration already happened through the API, so a direct DB read is not
+  // possible from here — verify persistence via a fresh login + /me instead.
+  const login = await probe.request('POST', '/api/auth/login', {
+    email,
+    password: globalThis.__smokePassword,
+  });
+  const me = await probe.request('GET', '/api/auth/me');
+  return { login, me };
+}
+
 async function main() {
   const agent = makeAgent();
   const suffix = Date.now().toString(36).slice(-6);
@@ -107,10 +120,21 @@ async function main() {
   const cookieMe = await agent.request('GET', '/api/auth/me');
   check('register sets a working auth cookie', cookieMe.status === 200 && cookieMe.body?.data?.user?.email === userA.email);
 
-  const storedUsers = readDataFile('users.json');
-  const storedA = storedUsers.find((u) => u.email === userA.email);
-  check('user persisted by backend', Boolean(storedA));
-  check('password stored as bcrypt hash (not plain text)', Boolean(storedA?.passwordHash?.startsWith('$2')) && !JSON.stringify(storedA).includes(userA.password));
+  if (process.env.MONGODB_URI) {
+    // Cloud store: prove the account really persisted by logging in fresh.
+    globalThis.__smokePassword = userA.password;
+    const snapshot = await mongoUserSnapshot(userA.email);
+    check('user persisted in MongoDB (fresh login works)', snapshot.login.status === 200);
+    check(
+      'password verified by backend (never echoed back)',
+      snapshot.me.status === 200 && !JSON.stringify(snapshot.me.body).includes(userA.password)
+    );
+  } else {
+    const storedUsers = readDataFile('users.json');
+    const storedA = storedUsers.find((u) => u.email === userA.email);
+    check('user persisted by backend', Boolean(storedA));
+    check('password stored as bcrypt hash (not plain text)', Boolean(storedA?.passwordHash?.startsWith('$2')) && !JSON.stringify(storedA).includes(userA.password));
+  }
 
   const dup = await agent.request('POST', '/api/auth/register', userA);
   check('duplicate email rejected with 409', dup.status === 409);

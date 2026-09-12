@@ -3,7 +3,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const config = require('../config');
-const storage = require('../storage/json-storage');
+const storage = require('../storage');
 const { HttpError } = require('../utils/http-error');
 const { isBlank, isEmail, normalizeInput } = require('../utils/validation');
 
@@ -50,7 +50,7 @@ function validateRegistration(input, errors) {
 /* Business logic                                                      */
 /* ------------------------------------------------------------------ */
 
-function register(input) {
+async function register(input) {
   const data = normalizeInput(input);
   const errors = {};
   validateRegistration(data, errors);
@@ -60,23 +60,35 @@ function register(input) {
   }
 
   const email = data.email.toLowerCase();
-  if (storage.findUserByEmail(email)) {
+  if (await storage.findUserByEmail(email)) {
     throw new HttpError(409, 'An account with this email already exists. Try logging in instead.', {
       email: 'This email is already registered.',
     });
   }
 
   const passwordHash = bcrypt.hashSync(data.password, 10);
-  const user = storage.addUser({
-    fullName: data.fullName,
-    email,
-    passwordHash,
-  });
+  let user;
+  try {
+    user = await storage.addUser({
+      fullName: data.fullName,
+      email,
+      passwordHash,
+    });
+  } catch (err) {
+    // Atomic duplicate guard from the Mongo unique index (two requests racing
+    // past the check above still collapse to one 409, never two accounts).
+    if (err && err.code === storage.EMAIL_TAKEN) {
+      throw new HttpError(409, 'An account with this email already exists. Try logging in instead.', {
+        email: 'This email is already registered.',
+      });
+    }
+    throw err;
+  }
 
   return { user: publicUser(user), token: signSession(user.id) };
 }
 
-function login(input) {
+async function login(input) {
   const data = normalizeInput(input);
   const errors = {};
   if (isBlank(data.email)) errors.email = 'Please enter your email.';
@@ -87,7 +99,7 @@ function login(input) {
     throw new HttpError(400, 'Please fix the highlighted fields.', errors);
   }
 
-  const user = storage.findUserByEmail(data.email);
+  const user = await storage.findUserByEmail(data.email);
   // Same message for unknown email and wrong password — do not leak
   // which accounts exist.
   if (!user || !bcrypt.compareSync(data.password, user.passwordHash)) {

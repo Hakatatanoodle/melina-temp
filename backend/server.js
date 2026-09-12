@@ -12,7 +12,7 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 
 const config = require('./config');
-const storage = require('./storage/json-storage');
+const storage = require('./storage');
 const { notFoundHandler, errorHandler } = require('./middleware/error.middleware');
 const authRoutes = require('./routes/auth.routes');
 const petsRoutes = require('./routes/pets.routes');
@@ -42,13 +42,20 @@ function createApp() {
 }
 
 function start() {
-  storage.ensureDataFiles();
-
-  const app = createApp();
-  app.listen(config.port, () => {
-    // eslint-disable-next-line no-console
-    console.log(`[PetCare] backend listening on http://localhost:${config.port}`);
-  });
+  storage
+    .ensureDataFiles()
+    .then(() => {
+      const app = createApp();
+      app.listen(config.port, () => {
+        // eslint-disable-next-line no-console
+        console.log(`[PetCare] backend listening on http://localhost:${config.port}`);
+      });
+    })
+    .catch((err) => {
+      // eslint-disable-next-line no-console
+      console.error('[PetCare] could not connect to the database:', err.message);
+      process.exit(1);
+    });
 }
 
 if (require.main === module) {

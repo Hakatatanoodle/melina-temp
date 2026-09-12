@@ -23,14 +23,14 @@ function clearAuthCookie(res) {
 
 // POST /api/auth/register
 const register = asyncHandler(async (req, res) => {
-  const { user, token } = authService.register(req.body || {});
+  const { user, token } = await authService.register(req.body || {});
   setAuthCookie(res, token);
   sendSuccess(res, 201, { user });
 });
 
 // POST /api/auth/login
 const login = asyncHandler(async (req, res) => {
-  const { user, token } = authService.login(req.body || {});
+  const { user, token } = await authService.login(req.body || {});
   setAuthCookie(res, token);
   sendSuccess(res, 200, { user });
 });

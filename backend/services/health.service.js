@@ -1,6 +1,6 @@
 'use strict';
 
-const storage = require('../storage/json-storage');
+const storage = require('../storage');
 const { HttpError } = require('../utils/http-error');
 const { isBlank, isDateOnly, normalizeInput } = require('../utils/validation');
 
@@ -17,20 +17,20 @@ function todayIso() {
   return new Date().toISOString().slice(0, 10);
 }
 
-function getOwnedPet(ownerId, petId) {
-  const pet = storage.findPetById(petId);
+async function getOwnedPet(ownerId, petId) {
+  const pet = await storage.findPetById(petId);
   if (!pet || pet.ownerId !== ownerId) {
     throw new HttpError(404, 'Pet not found.');
   }
   return pet;
 }
 
-function getOwnedRecord(ownerId, recordId) {
-  const record = storage.findRecordById(recordId);
+async function getOwnedRecord(ownerId, recordId) {
+  const record = await storage.findRecordById(recordId);
   if (!record) {
     throw new HttpError(404, 'Health record not found.');
   }
-  const pet = storage.findPetById(record.petId);
+  const pet = await storage.findPetById(record.petId);
   if (!pet || pet.ownerId !== ownerId) {
     throw new HttpError(404, 'Health record not found.');
   }
@@ -65,13 +65,13 @@ function buildRecord(petId, data) {
   };
 }
 
-function listForPet(ownerId, petId) {
-  getOwnedPet(ownerId, petId);
+async function listForPet(ownerId, petId) {
+  await getOwnedPet(ownerId, petId);
   return storage.getRecordsByPet(petId);
 }
 
-function createForPet(ownerId, petId, input) {
-  getOwnedPet(ownerId, petId);
+async function createForPet(ownerId, petId, input) {
+  await getOwnedPet(ownerId, petId);
   const data = normalizeInput(input);
   const errors = {};
   validateRecordInput(data, errors);
@@ -81,8 +81,8 @@ function createForPet(ownerId, petId, input) {
   return storage.addRecord(buildRecord(petId, data));
 }
 
-function updateForOwner(ownerId, recordId, input) {
-  const record = getOwnedRecord(ownerId, recordId);
+async function updateForOwner(ownerId, recordId, input) {
+  const record = await getOwnedRecord(ownerId, recordId);
   const data = normalizeInput(input);
   const errors = {};
   validateRecordInput(data, errors);
@@ -101,17 +101,17 @@ function updateForOwner(ownerId, recordId, input) {
   return storage.updateRecord(updated);
 }
 
-function removeForOwner(ownerId, recordId) {
-  getOwnedRecord(ownerId, recordId);
-  storage.deleteRecord(recordId);
+async function removeForOwner(ownerId, recordId) {
+  await getOwnedRecord(ownerId, recordId);
+  await storage.deleteRecord(recordId);
 }
 
-function listForOwner(ownerId) {
-  const pets = storage.getPetsByOwner(ownerId);
+async function listForOwner(ownerId) {
+  const pets = await storage.getPetsByOwner(ownerId);
 
   const records = [];
   for (const pet of pets) {
-    for (const record of storage.getRecordsByPet(pet.id)) {
+    for (const record of await storage.getRecordsByPet(pet.id)) {
       records.push({
         ...record,
         pet: { id: pet.id, name: pet.name, imageUrl: pet.imageUrl },

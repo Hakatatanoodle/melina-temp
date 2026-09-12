@@ -15,14 +15,19 @@ require('dotenv').config();
 const express = require('express');
 const cookieParser = require('cookie-parser');
 
-const storage = require('../backend/storage/json-storage');
+const storage = require('../backend/storage');
 const { notFoundHandler, errorHandler } = require('../backend/middleware/error.middleware');
 const authRoutes = require('../backend/routes/auth.routes');
 const petsRoutes = require('../backend/routes/pets.routes');
 const healthRoutes = require('../backend/routes/health.routes');
 const uploadsRoutes = require('../backend/routes/uploads.routes');
 
-storage.ensureDataFiles();
+// Storage init is best-effort here: a failed DB connection must surface as a
+// 500 on the request that needs it, never as a crashed cold start.
+storage.ensureDataFiles().catch((err) => {
+  // eslint-disable-next-line no-console
+  console.error('[PetCare] storage init failed:', err.message);
+});
 
 const app = express();
 

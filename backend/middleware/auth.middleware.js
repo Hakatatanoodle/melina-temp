@@ -2,7 +2,7 @@
 
 const jwt = require('jsonwebtoken');
 const config = require('../config');
-const { findUserById } = require('../storage/json-storage');
+const { findUserById } = require('../storage');
 const { HttpError } = require('../utils/http-error');
 
 /**
@@ -27,13 +27,15 @@ function requireAuth(req, res, next) {
     return next(new HttpError(401, 'Your session has expired. Please log in again.'));
   }
 
-  const user = findUserById(payload.sub);
-  if (!user) {
-    return next(new HttpError(401, 'Your session has expired. Please log in again.'));
-  }
-
-  req.user = { id: user.id, fullName: user.fullName, email: user.email, createdAt: user.createdAt };
-  return next();
+  findUserById(payload.sub)
+    .then((user) => {
+      if (!user) {
+        return next(new HttpError(401, 'Your session has expired. Please log in again.'));
+      }
+      req.user = { id: user.id, fullName: user.fullName, email: user.email, createdAt: user.createdAt };
+      return next();
+    })
+    .catch(next);
 }
 
 module.exports = { requireAuth };
