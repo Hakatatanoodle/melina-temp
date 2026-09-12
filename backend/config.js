@@ -19,7 +19,7 @@ const config = {
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
   cookieName: 'petcare_token',
   cookieMaxAgeMs: 7 * 24 * 60 * 60 * 1000, // keep in sync with jwtExpiresIn default
-  isProduction: process.env.NODE_ENV === 'production',
+  isProduction: process.env.NODE_ENV === 'production' || process.env.VERCEL === '1',
 };
 
 if (!config.jwtSecret) {

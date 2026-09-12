@@ -18,7 +18,9 @@ const crypto = require('crypto');
  * controllers or services.
  */
 
-const DATA_DIR = path.join(__dirname, '..', 'data');
+const DATA_DIR =
+  process.env.PETCARE_DATA_DIR ||
+  (process.env.VERCEL === '1' ? '/tmp/petcare-data' : path.join(__dirname, '..', 'data'));
 
 const FILES = {
   users: path.join(DATA_DIR, 'users.json'),

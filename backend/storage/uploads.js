@@ -13,7 +13,12 @@ const crypto = require('crypto');
  * are referenced by pets via `/api/uploads/<userId>/<filename>`.
  */
 
-const UPLOADS_DIR = path.join(__dirname, '..', 'data', 'uploads');
+const UPLOADS_DIR =
+  process.env.PETCARE_DATA_DIR
+    ? path.join(process.env.PETCARE_DATA_DIR, 'uploads')
+    : process.env.VERCEL === '1'
+      ? '/tmp/petcare-uploads'
+      : path.join(__dirname, '..', 'data', 'uploads');
 const SAFE_FILENAME = /^[0-9a-f-]{36}\.(jpg|jpeg|png|webp|gif)$/i;
 const UPLOAD_URL = /^\/api\/uploads\/([0-9a-fA-F-]{36})\/([0-9a-fA-F-]{36}\.(?:jpg|jpeg|png|webp|gif))$/;
 
