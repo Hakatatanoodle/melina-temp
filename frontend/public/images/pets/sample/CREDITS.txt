@@ -35,4 +35,44 @@ other-1.jpg
   Source file : File:Grey Holland Lop rabbit.jpg
   Author     : Takkiln
   License    : CC BY-SA 4.0
+dog-3.jpg
+  Source file : File:Portrait of a labrador retriever.jpg
+  Author     : Dktue
+  License    : CC0
+dog-4.jpg
+  Source file : File:Cream shiba inu dllu.jpg
+  Author     : Dllu
+  License    : CC BY-SA 4.0
+dog-5.jpg
+  Source file : File:Pug - 1 year Old.jpg
+  Author     : Augustus Binu : flickr
+  License    : CC BY-SA 3.0
+dog-6.jpg
+  Source file : File:Border Collie with Heterochromia 2.jpg
+  Author     : 7575u
+  License    : CC BY-SA 4.0
+cat-3.jpg
+  Source file : File:Tabby cat with blue eyes-3336579.jpg
+  Author     : AdinaVoicu
+  License    : CC0
+cat-4.jpg
+  Source file : File:A kitten on the lawn (Pixabay).jpg
+  Author     : Ilona Ilyés
+  License    : CC0
+cat-5.jpg
+  Source file : File:Siamese cat, chocolate point.jpg
+  Author     : Felinlove
+  License    : CC BY-SA 4.0
+rabbit-1.jpg
+  Source file : File:Two bonded rabbit pair sitting together.jpg
+  Author     : Kippo44
+  License    : CC BY-SA 4.0
+bird-1.jpg
+  Source file : File:My pet budgerigar sitting on my shoulder.jpg
+  Author     : BudgieGuy16
+  License    : CC BY-SA 4.0
+hamster-1.jpg
+  Source file : File:Baby Hamster - 2 Weeks Old.jpg
+  Author     : Augustus Binu : flickr : Instagram
+  License    : CC BY-SA 3.0
 

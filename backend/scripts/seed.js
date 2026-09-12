@@ -15,6 +15,7 @@ const path = require('path');
 const bcrypt = require('bcryptjs');
 
 const storage = require('../storage/json-storage');
+const uploadStorage = require('../storage/uploads');
 
 const DATA_DIR = path.join(__dirname, '..', 'data');
 
@@ -29,6 +30,7 @@ function resetDataFiles() {
   for (const name of ['users.json', 'pets.json', 'health-records.json']) {
     fs.writeFileSync(path.join(DATA_DIR, name), '[]\n', 'utf8');
   }
+  uploadStorage.clearAll();
 }
 
 function main() {
@@ -66,6 +68,36 @@ function main() {
     weightKg: 4.2,
     notes: 'Indoor cat. Brush twice a week — she sheds a lot in spring.',
     imageUrl: '/images/pets/sample/cat-1.jpg',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  });
+
+  const coco = storage.addPet({
+    id: storage.newId(),
+    ownerId: user.id,
+    name: 'Coco',
+    species: 'Cat',
+    breed: 'Tabby',
+    dateOfBirth: isoOffset(-365 - 40),
+    gender: 'Male',
+    weightKg: 4.8,
+    notes: 'Street rescue, spoiled rotten. Loves cardboard boxes.',
+    imageUrl: '/images/pets/sample/cat-3.jpg',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  });
+
+  const nibbles = storage.addPet({
+    id: storage.newId(),
+    ownerId: user.id,
+    name: 'Nibbles',
+    species: 'Hamster',
+    breed: '',
+    dateOfBirth: null,
+    gender: 'Male',
+    weightKg: 0.12,
+    notes: 'Wheel comes out at midnight. Handle gently.',
+    imageUrl: '/images/pets/sample/hamster-1.jpg',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   });
@@ -118,6 +150,22 @@ function main() {
       date: isoOffset(-320),
       clinic: '',
       description: 'Started brushing routine; mats reduced significantly.',
+    },
+    {
+      petId: coco.id,
+      type: 'vaccination',
+      title: 'FVRCP vaccine',
+      date: isoOffset(-14),
+      clinic: 'Green Valley Clinic',
+      description: 'Initial vaccine series, first dose. No reaction.',
+    },
+    {
+      petId: nibbles.id,
+      type: 'checkup',
+      title: 'First vet visit',
+      date: isoOffset(-35),
+      clinic: 'Small Friends Veterinary',
+      description: 'Healthy. Advised to trim nails monthly.',
     },
   ];
 

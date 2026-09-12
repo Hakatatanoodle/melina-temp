@@ -25,6 +25,13 @@ function errorHandler(err, req, res, next) {
     return res.status(err.status).json(body);
   }
 
+  if (err && err.name === 'MulterError') {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(413).json({ success: false, message: 'Photo must be 5 MB or smaller.' });
+    }
+    return res.status(400).json({ success: false, message: 'Could not process that upload.' });
+  }
+
   if (err && err.type === 'entity.parse.failed') {
     return res.status(400).json({ success: false, message: 'The request body is not valid JSON.' });
   }

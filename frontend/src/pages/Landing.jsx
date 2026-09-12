@@ -1,35 +1,12 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
-import PetCard from '../components/PetCard.jsx';
 
-/** Product preview pets — static, non-interactive (pointer-events disabled). */
-const PREVIEW_PETS = [
-  {
-    id: 'preview-bruno',
-    name: 'Bruno',
-    species: 'Dog',
-    breed: 'Golden Retriever',
-    dateOfBirth: '2023-05-14',
-    gender: 'Male',
-    weightKg: 28.5,
-    imageUrl: '/images/pets/sample/dog-1.jpg',
-    nextCare: { type: 'vaccination', title: 'Rabies booster', date: '2026-10-12' },
-    lastCare: null,
-    healthRecordCount: 5,
-  },
-  {
-    id: 'preview-luna',
-    name: 'Luna',
-    species: 'Cat',
-    breed: 'Persian',
-    dateOfBirth: '2024-02-03',
-    gender: 'Female',
-    weightKg: 4.2,
-    imageUrl: '/images/pets/sample/cat-1.jpg',
-    nextCare: null,
-    lastCare: { type: 'checkup', title: 'General checkup', date: '2026-08-20' },
-    healthRecordCount: 3,
-  },
+const GALLERY = [
+  { src: '/images/pets/sample/dog-3.jpg', caption: 'Dogs' },
+  { src: '/images/pets/sample/cat-3.jpg', caption: 'Cats' },
+  { src: '/images/pets/sample/rabbit-1.jpg', caption: 'Rabbits' },
+  { src: '/images/pets/sample/bird-1.jpg', caption: 'Birds' },
+  { src: '/images/pets/sample/hamster-1.jpg', caption: 'Hamsters' },
 ];
 
 const STEPS = [
@@ -99,8 +76,8 @@ export default function Landing() {
         <div className="hero__media">
           <img src="/images/pets/sample/hero-golden.jpg" alt="A golden retriever relaxing in warm light" />
           <div className="hero__media-caption">
-            Bruno's rabies booster
-            <span>Tue, Oct 12 — set up in seconds</span>
+            Next care: Rabies booster · Oct 12
+            <span>A reminder your vet team would be proud of</span>
           </div>
         </div>
       </section>
@@ -119,31 +96,18 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="container landing-preview">
-        <h2 className="landing-section-title">Your pets, at a glance</h2>
-        <p className="landing-section-sub">A calm dashboard with the care information that matters right now.</p>
-        <div className="preview-shell">
-          <div className="preview-top">
-            <span className="landing-section-title" style={{ fontSize: 22 }}>
-              Good morning, Alex.
-            </span>
-            <div className="preview-top__stats">
-              <span>
-                <b>2</b> Pets
-              </span>
-              <span>
-                <b>8</b> Health records
-              </span>
-              <span>
-                <b>1</b> Upcoming
-              </span>
-            </div>
-          </div>
-          <div className="preview-pets">
-            {PREVIEW_PETS.map((pet) => (
-              <PetCard key={pet.id} pet={pet} />
-            ))}
-          </div>
+      <section className="container landing-gallery">
+        <h2 className="landing-section-title">Every kind of companion</h2>
+        <p className="landing-section-sub">
+          Dogs, cats, rabbits, birds, hamsters — if it is part of your family, it belongs in PetCare.
+        </p>
+        <div className="gallery-grid">
+          {GALLERY.map((item) => (
+            <figure className="gallery-item" key={item.caption}>
+              <img src={item.src} alt="" loading="lazy" />
+              <figcaption>{item.caption}</figcaption>
+            </figure>
+          ))}
         </div>
       </section>
 

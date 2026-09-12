@@ -18,14 +18,20 @@ export class ApiError extends Error {
   }
 }
 
-async function request(path, { method = 'GET', body } = {}) {
+async function request(path, { method = 'GET', body, form } = {}) {
+  const hasBody = body !== undefined || form !== undefined;
+  const headers = {};
+  if (hasBody && !form) headers['Content-Type'] = 'application/json';
+
   let res;
   try {
     res = await fetch(`${BASE}${path}`, {
       method,
       credentials: 'same-origin',
-      headers: body !== undefined ? { 'Content-Type': 'application/json' } : undefined,
-      body: body === undefined ? undefined : JSON.stringify(body),
+      headers,
+      // For FormData we omit the Content-Type header so the browser sets the
+      // multipart boundary itself.
+      body: form || (body === undefined ? undefined : JSON.stringify(body)),
     });
   } catch {
     throw new ApiError('Cannot reach the PetCare service. Please check your connection.', 0);
@@ -54,4 +60,6 @@ export const api = {
   post: (path, body) => request(path, { method: 'POST', body }),
   put: (path, body) => request(path, { method: 'PUT', body }),
   delete: (path) => request(path, { method: 'DELETE' }),
+  /** Multipart file upload; returns { path } pointing at the stored image. */
+  upload: (formData) => request('/uploads', { method: 'POST', form: formData }),
 };

@@ -1,6 +1,7 @@
 'use strict';
 
 const storage = require('../storage/json-storage');
+const uploadStorage = require('../storage/uploads');
 const { HttpError } = require('../utils/http-error');
 const {
   isBlank,
@@ -163,6 +164,14 @@ function createForOwner(ownerId, input) {
   return composePet(storage.addPet(buildPet(ownerId, data)));
 }
 
+/** Removes the uploaded image file behind an imageUrl, when there is one. */
+function removeImageIfUploaded(ownerId, imageUrl) {
+  const parsed = uploadStorage.parseUploadUrl(imageUrl);
+  if (parsed && parsed.ownerId === ownerId) {
+    uploadStorage.deleteImage(parsed.ownerId, parsed.filename);
+  }
+}
+
 function updateForOwner(ownerId, petId, input) {
   const pet = getOwnedPet(ownerId, petId);
   const data = normalizeInput(input);
@@ -171,13 +180,19 @@ function updateForOwner(ownerId, petId, input) {
   if (Object.keys(errors).length > 0) {
     throw new HttpError(400, 'Please fix the highlighted fields.', errors);
   }
-  return composePet(storage.updatePet(applyUpdates(pet, data)));
+  const updated = storage.updatePet(applyUpdates(pet, data));
+  // Discard the old uploaded file when the photo was replaced.
+  if (pet.imageUrl !== updated.imageUrl) {
+    removeImageIfUploaded(ownerId, pet.imageUrl);
+  }
+  return composePet(updated);
 }
 
 function removeForOwner(ownerId, petId) {
-  getOwnedPet(ownerId, petId);
+  const pet = getOwnedPet(ownerId, petId);
   storage.deletePet(petId);
   storage.deleteRecordsByPet(petId);
+  removeImageIfUploaded(ownerId, pet.imageUrl);
 }
 
 module.exports = {

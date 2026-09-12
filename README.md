@@ -37,9 +37,10 @@ npm run dev:frontend     # in another
 npm run seed             # resets backend/data/ to a fresh demo state
 ```
 
-Creates **demo@petcare.dev** / **demo-petcare** with Bruno (Golden Retriever)
-and Luna (Persian) plus realistic health records. Use it for screenshots and
-demos; the smoke test or manual sign-up can create other accounts.
+Creates **demo@petcare.dev** / **demo-petcare** with Bruno (Golden Retriever),
+Luna (Persian), Coco (Tabby) and Nibbles (Hamster) plus realistic health
+records. Use it for screenshots and demos; the smoke test or manual sign-up
+can create other accounts.
 
 ### Verification
 
@@ -62,8 +63,9 @@ Landing  →  Register / Login  →  Protected Dashboard
 ```
 
 * **Pets** — add, view, edit, remove; each pet has name, species, breed, date
-  of birth, gender, weight, notes and an optional photo (a warm branded
-  monogram fallback is used when there is none).
+  of birth, gender, weight, notes and an optional photo — **upload one from
+  your device or paste a URL** (a warm branded monogram fallback is used when
+  there is none).
 * **Health records** — per-pet timeline of vaccinations, checkups, medications,
   treatments and other notes, with title, date, clinic and description.
 * **Ownership** — every request is checked against the logged-in user;
@@ -126,6 +128,8 @@ Browser → Express route → auth middleware → controller → service
 | GET | `/api/health-records` | ✓ | All the user's records, newest first, joined with pet |
 | PUT | `/api/health-records/:id` | ✓ | Update record (ownership via parent pet) |
 | DELETE | `/api/health-records/:id` | ✓ | Delete record (ownership via parent pet) |
+| POST | `/api/uploads` | ✓ | Upload a pet photo (multipart `photo` field; JPG/PNG/WebP/GIF ≤ 5 MB) → `{ path }` |
+| GET | `/api/uploads/:owner/:file` | ✓ | Serve an uploaded photo (owner-only) |
 | GET | `/api/health` | – | Liveness probe |
 
 Responses are consistent: `{ "success": true, "data": … }` or
@@ -145,7 +149,9 @@ Responses are consistent: `{ "success": true, "data": … }` or
 
 `backend/data/*.json` survives restarts (verified in the smoke workflow).
 The storage layer is the single seam — swapping JSON for a database later
-would not touch controllers or services.
+would not touch controllers or services. Uploaded photos live in
+`backend/data/uploads/<userId>/` (also gitignored); the image file is deleted
+when its pet is removed or its photo is replaced.
 
 ---
 

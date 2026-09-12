@@ -17,6 +17,7 @@ const { notFoundHandler, errorHandler } = require('./middleware/error.middleware
 const authRoutes = require('./routes/auth.routes');
 const petsRoutes = require('./routes/pets.routes');
 const healthRoutes = require('./routes/health.routes');
+const uploadsRoutes = require('./routes/uploads.routes');
 
 function createApp() {
   const app = express();
@@ -32,6 +33,7 @@ function createApp() {
   app.use('/api/auth', authRoutes);
   app.use('/api/pets', petsRoutes);
   app.use('/api/health-records', healthRoutes);
+  app.use('/api/uploads', uploadsRoutes);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Field from './Field.jsx';
+import PhotoPicker from './PhotoPicker.jsx';
 
 /**
  * Shared create/edit pet form. The page decides product copy ("Add Pet" vs
@@ -139,23 +140,13 @@ export default function PetForm({ initialValues, submitLabel, onSubmit }) {
           />
         </Field>
 
-        <Field
-          label="Photo URL"
-          htmlFor="pet-image"
-          error={errors.imageUrl}
-          optional
-          hint="Leave empty and PetCare will use a warm placeholder portrait."
-          className="field--full"
-        >
-          <input
-            id="pet-image"
-            className="input"
+        <div className="field field--full" style={{ marginBottom: 10 }}>
+          <PhotoPicker
             value={values.imageUrl}
-            onChange={(event) => set('imageUrl', event.target.value)}
-            placeholder="https://…"
-            autoComplete="off"
+            error={errors.imageUrl}
+            onChange={(imageUrl) => set('imageUrl', imageUrl)}
           />
-        </Field>
+        </div>
 
         <Field label="Notes" htmlFor="pet-notes" error={errors.notes} optional className="field--full">
           <textarea

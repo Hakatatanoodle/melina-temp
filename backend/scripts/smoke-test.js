@@ -34,7 +34,19 @@ function check(name, condition, detail) {
 function makeAgent() {
   let cookie = null;
 
+  function setCookieFromHeaders(res) {
+    const setCookie = res.headers.getSetCookie ? res.headers.getSetCookie() : [];
+    for (const entry of setCookie) {
+      const [pair] = entry.split(';');
+      if (pair.startsWith('petcare_token=')) {
+        if (pair === 'petcare_token=') cookie = null; // cleared
+        else cookie = pair;
+      }
+    }
+  }
+
   return {
+    rawCookie: () => cookie,
     async request(method, url, body) {
       const headers = {};
       if (cookie) headers.Cookie = cookie;
@@ -46,14 +58,21 @@ function makeAgent() {
         body: body === undefined ? undefined : JSON.stringify(body),
       });
 
-      const setCookie = res.headers.getSetCookie ? res.headers.getSetCookie() : [];
-      for (const entry of setCookie) {
-        const [pair] = entry.split(';');
-        if (pair.startsWith('petcare_token=')) {
-          if (pair === 'petcare_token=') cookie = null; // cleared
-          else cookie = pair;
-        }
+      setCookieFromHeaders(res);
+
+      let json = null;
+      try {
+        json = await res.json();
+      } catch {
+        json = null;
       }
+      return { status: res.status, body: json };
+    },
+    async requestForm(method, url, form) {
+      const headers = {};
+      if (cookie) headers.Cookie = cookie;
+      const res = await fetch(`${BASE_URL}${url}`, { method, headers, body: form });
+      setCookieFromHeaders(res);
 
       let json = null;
       try {
@@ -76,6 +95,7 @@ async function main() {
   const suffix = Date.now().toString(36).slice(-6);
   const userA = { fullName: 'Alex Rivera', email: `alex.${suffix}@example.com`, password: 'sunflower-42', confirmPassword: 'sunflower-42' };
   const userB = { fullName: 'Bea Novak', email: `bea.${suffix}@example.com`, password: 'maple-syrup-9', confirmPassword: 'maple-syrup-9' };
+  let uploadedPath = null;
 
   console.log('— Health —');
   const health = await agent.request('GET', '/api/health');
@@ -112,8 +132,41 @@ async function main() {
   const listed = await agent.request('GET', '/api/pets');
   check('list pets shows the new pet', listed.status === 200 && listed.body.data.pets.length === 1);
 
-  const updated = await agent.request('PUT', `/api/pets/${pet.id}`, { ...petIn, name: 'Bruno B', weightKg: 29 });
-  check('update pet persists new values', updated.status === 200 && updated.body.data.pet.name === 'Bruno B' && updated.body.data.pet.weightKg === 29);
+  console.log('— Photo uploads —');
+  const pngBytes = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3, 4, 5, 6, 7, 8]);
+  const uploadForm = new FormData();
+  uploadForm.append('photo', new Blob([pngBytes], { type: 'image/png' }), 'portrait.png');
+  const upload = await agent.requestForm('POST', '/api/uploads', uploadForm);
+  uploadedPath = upload.body?.data?.path;
+  check(
+    'upload image returns 201 with an api path',
+    upload.status === 201 && /^\/api\/uploads\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.png$/.test(uploadedPath || '')
+  );
+  const served = uploadedPath ? await fetch(`${BASE_URL}${uploadedPath}`, { headers: { Cookie: agent.rawCookie() } }) : null;
+  check('uploaded image is served back with auth', served?.status === 200 && served?.headers?.get('content-type')?.includes('image/png'));
+
+  const textForm = new FormData();
+  textForm.append('photo', new Blob(['not an image'], { type: 'text/plain' }), 'note.txt');
+  const rejected = await agent.requestForm('POST', '/api/uploads', textForm);
+  check('non-image upload rejected (415)', rejected.status === 415);
+
+  const tooBig = new FormData();
+  tooBig.append('photo', new Blob([new Uint8Array(6 * 1024 * 1024).fill(0x89)], { type: 'image/png' }), 'huge.png');
+  check('oversized upload rejected (413)', (await agent.requestForm('POST', '/api/uploads', tooBig)).status === 413);
+
+  const updated = await agent.request('PUT', `/api/pets/${pet.id}`, {
+    ...petIn,
+    name: 'Bruno B',
+    weightKg: 29,
+    imageUrl: uploadedPath || petIn.imageUrl,
+  });
+  check(
+    'update pet persists new values + uploaded photo',
+    updated.status === 200 &&
+      updated.body.data.pet.name === 'Bruno B' &&
+      updated.body.data.pet.weightKg === 29 &&
+      updated.body.data.pet.imageUrl === uploadedPath
+  );
 
   const badPet = await agent.request('POST', '/api/pets', { name: '', species: '' });
   check('invalid pet → 400 with field errors', badPet.status === 400 && badPet.body?.errors?.name && badPet.body?.errors?.species);
@@ -155,6 +208,11 @@ async function main() {
   const foreignRec = await agent.request('POST', `/api/pets/${pet.id}/health-records`, recIn);
   check("User B cannot add records to User A's pet (404)", foreignRec.status === 404);
 
+  if (uploadedPath) {
+    const foreignUpload = await fetch(`${BASE_URL}${uploadedPath}`, { headers: { Cookie: agent.rawCookie() } });
+    check("User B cannot view User A's uploaded photo (404)", foreignUpload.status === 404);
+  }
+
   check("User B cannot list User A's pets", (await agent.request('GET', '/api/pets')).body.data.pets.length === 0);
 
   const noAuth = makeAgent(); // no cookie at all
@@ -167,6 +225,11 @@ async function main() {
   check('User A logs back in before deleting', switchBack.status === 200 && switchBack.body?.data?.user?.email === userA.email);
   check('owner deletes own pet', (await agent.request('DELETE', `/api/pets/${pet.id}`)).status === 200);
   check("User A's pet list empty again", (await agent.request('GET', '/api/pets')).body.data.pets.length === 0);
+
+  if (uploadedPath) {
+    const orphan = await fetch(`${BASE_URL}${uploadedPath}`, { headers: { Cookie: agent.rawCookie() } });
+    check('deleting the pet removes its uploaded photo (404)', orphan.status === 404);
+  }
 
   const logout = await agent.request('POST', '/api/auth/logout');
   check('logout clears the auth cookie', logout.status === 200 && (await agent.request('GET', '/api/auth/me')).status === 401);
