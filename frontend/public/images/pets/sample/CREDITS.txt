@@ -1,0 +1,38 @@
+PetCare sample photography
+Photos: Wikimedia Commons (CC-licensed), see entries below.
+
+hero-golden.jpg
+  Source file : File:Dülmen, Hausdülmen, Golden Retriever -- 2022 -- 5945.jpg
+  Author     : Dietmar Rabich
+  License    : CC BY-SA 4.0
+
+auth-beagle.jpg
+  Source file : File:Beagle in Viroinval (DSC04556).jpg
+  Author     : Trougnouf (Benoit Brummer)
+  License    : CC BY 4.0
+
+dog-1.jpg
+  Source file : File:Callie the golden retriever puppy.jpg
+  Author     : MichaelMcPhee
+  License    : CC BY 3.0
+
+dog-2.jpg
+  Source file : File:Beagle at the dog park.jpg
+  Author     : Slyronit
+  License    : CC BY-SA 4.0
+
+cat-1.jpg
+  Source file : File:Persian in Cat Cafe.jpg
+  Author     : Takashi(aes256)
+  License    : CC BY-SA 2.0
+
+cat-2.jpg
+  Source file : File:Mystica from British Empire Cattery.jpg
+  Author     : BritishEmpire
+  License    : CC BY-SA 3.0
+
+other-1.jpg
+  Source file : File:Grey Holland Lop rabbit.jpg
+  Author     : Takkiln
+  License    : CC BY-SA 4.0
+

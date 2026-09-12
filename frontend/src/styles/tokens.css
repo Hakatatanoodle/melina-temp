@@ -1,0 +1,51 @@
+/* ==========================================================================
+   PetCare design tokens — source: design.md
+   Warm Ivory foundation · Deep Ink text · Moss actions · Clay warmth · Sand borders
+   ========================================================================== */
+
+:root {
+  /* Color */
+  --ivory: #f7f4ee;
+  --ink: #232521;
+  --ink-soft: #5a5d54;
+  --ink-faint: #8b8e82;
+  --moss: #6f8467;
+  --moss-dark: #55664f;
+  --moss-tint: #e9eee3;
+  --clay: #b87859;
+  --clay-tint: #f4e9e1;
+  --sand: #e8dfd1;
+  --sand-soft: #f0ebe1;
+  --white: #ffffff;
+
+  --success: #4e7a5a;
+  --success-tint: #e2ede4;
+  --warning: #b98a3c;
+  --warning-tint: #f5ebd8;
+  --error: #b4573e;
+  --error-tint: #f6e4dc;
+
+  /* Typography */
+  --font-sans: 'Manrope', 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  --font-display: 'Fraunces', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+
+  /* Shape — soft geometry with restraint */
+  --radius-card: 20px;
+  --radius-lg: 24px;
+  --radius-input: 12px;
+  --radius-pill: 999px;
+
+  /* Shadows — extremely soft, used only when a surface needs elevation */
+  --shadow-soft: 0 1px 2px rgba(35, 37, 33, 0.04), 0 10px 28px rgba(35, 37, 33, 0.06);
+  --shadow-lift: 0 2px 4px rgba(35, 37, 33, 0.05), 0 14px 34px rgba(35, 37, 33, 0.09);
+  --shadow-pop: 0 4px 10px rgba(35, 37, 33, 0.08), 0 20px 44px rgba(35, 37, 33, 0.14);
+
+  /* Layout */
+  --container: 1120px;
+  --container-narrow: 760px;
+  --nav-h: 68px;
+
+  /* Motion — 150–250ms, gentle */
+  --ease: cubic-bezier(0.33, 1, 0.68, 1);
+  --speed: 200ms;
+}

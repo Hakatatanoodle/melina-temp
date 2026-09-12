@@ -1,0 +1,139 @@
+'use strict';
+
+/**
+ * Demo seed for PetCare.
+ *
+ *   npm run seed
+ *
+ * WARNING: this resets backend/data/*.json to a fresh demo state.
+ * Creates the account  demo@petcare.dev  (password: demo-petcare)
+ * with Bruno and Luna plus realistic health records.
+ */
+
+const fs = require('fs');
+const path = require('path');
+const bcrypt = require('bcryptjs');
+
+const storage = require('../storage/json-storage');
+
+const DATA_DIR = path.join(__dirname, '..', 'data');
+
+function isoOffset(days) {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+function resetDataFiles() {
+  storage.ensureDataFiles();
+  for (const name of ['users.json', 'pets.json', 'health-records.json']) {
+    fs.writeFileSync(path.join(DATA_DIR, name), '[]\n', 'utf8');
+  }
+}
+
+function main() {
+  resetDataFiles();
+
+  const user = storage.addUser({
+    fullName: 'Alex Rivera',
+    email: 'demo@petcare.dev',
+    passwordHash: bcrypt.hashSync('demo-petcare', 10),
+  });
+
+  const bruno = storage.addPet({
+    id: storage.newId(),
+    ownerId: user.id,
+    name: 'Bruno',
+    species: 'Dog',
+    breed: 'Golden Retriever',
+    dateOfBirth: isoOffset(-365 * 3 - 60),
+    gender: 'Male',
+    weightKg: 28.5,
+    notes: 'Loves long walks and swimming. Food-motivated, gentle with kids.',
+    imageUrl: '/images/pets/sample/dog-1.jpg',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  });
+
+  const luna = storage.addPet({
+    id: storage.newId(),
+    ownerId: user.id,
+    name: 'Luna',
+    species: 'Cat',
+    breed: 'Persian',
+    dateOfBirth: isoOffset(-365 * 2 - 100),
+    gender: 'Female',
+    weightKg: 4.2,
+    notes: 'Indoor cat. Brush twice a week — she sheds a lot in spring.',
+    imageUrl: '/images/pets/sample/cat-1.jpg',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  });
+
+  const records = [
+    {
+      petId: bruno.id,
+      type: 'vaccination',
+      title: 'Rabies booster',
+      date: isoOffset(30),
+      clinic: 'Green Valley Clinic',
+      description: 'Annual rabies booster due. Schedule morning appointment.',
+    },
+    {
+      petId: bruno.id,
+      type: 'checkup',
+      title: 'General checkup',
+      date: isoOffset(-23),
+      clinic: 'Healthy Paws Veterinary',
+      description: 'All clear. Vet recommends continuing joint supplements.',
+    },
+    {
+      petId: bruno.id,
+      type: 'medication',
+      title: 'Ear infection treatment',
+      date: isoOffset(-120),
+      clinic: 'Healthy Paws Veterinary',
+      description: '10-day drops, completed. No recurrence since.',
+    },
+    {
+      petId: luna.id,
+      type: 'checkup',
+      title: 'Annual wellness exam',
+      date: isoOffset(-9),
+      clinic: 'Green Valley Clinic',
+      description: 'Healthy weight. Slight tartar build-up — monitor teeth.',
+    },
+    {
+      petId: luna.id,
+      type: 'vaccination',
+      title: 'FVRCP vaccine',
+      date: isoOffset(-210),
+      clinic: 'Green Valley Clinic',
+      description: 'Core vaccine, no reaction.',
+    },
+    {
+      petId: luna.id,
+      type: 'other',
+      title: 'Grooming note',
+      date: isoOffset(-320),
+      clinic: '',
+      description: 'Started brushing routine; mats reduced significantly.',
+    },
+  ];
+
+  for (const record of records) {
+    storage.addRecord({
+      id: storage.newId(),
+      ...record,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+  }
+
+  console.log('Seed complete.');
+  console.log('  login:  demo@petcare.dev');
+  console.log('  password: demo-petcare');
+  console.log(`  pets: ${storage.getPetsByOwner(user.id).length}, records: ${records.length}`);
+}
+
+main();

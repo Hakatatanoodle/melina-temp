@@ -1,0 +1,14 @@
+{
+  "name": "petcare",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PetCare Management System — a small pet-care product (college full-stack project)",
+  "scripts": {
+    "install:all": "npm --prefix backend install && npm --prefix frontend install",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "seed": "npm --prefix backend run seed",
+    "smoke-test": "npm --prefix backend run smoke-test",
+    "build": "npm --prefix frontend run build"
+  }
+}
